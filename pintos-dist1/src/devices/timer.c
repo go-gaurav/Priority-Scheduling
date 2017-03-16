@@ -99,8 +99,6 @@ timer_sleep (int64_t ticks)
  * 3. after 'ticks' set the sleeping thread to active
  */
   thread_sleep(ticks);
-//  while (timer_elapsed (start) < ticks)
-//    thread_yield ();
 }
 
 /* Sleeps for approximately MS milliseconds.  Interrupts must be
@@ -179,7 +177,7 @@ timer_interrupt (struct intr_frame *args UNUSED)
 {
   ticks++;
   thread_tick();
-  thread_reinstate();
+  thread_foreach(thread_reinstate, 0);
 
 }
 

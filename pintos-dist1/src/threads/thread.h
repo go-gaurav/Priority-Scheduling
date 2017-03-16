@@ -89,7 +89,7 @@ struct thread
     uint8_t *stack;                     /* Saved stack pointer. */
     int priority;                       /* Priority. */
     struct list_elem allelem;           /* List element for all threads list. */
-
+//TODO:    struct list_elem blockedelem;           /* List element for blocked threads list. */
     int64_t blocked_ticks; // ticks till its blocked for
 
     /* Shared between thread.c and synch.c. */
@@ -128,6 +128,7 @@ const char *thread_name (void);
 void thread_exit (void) NO_RETURN;
 void thread_yield (void);
 void thread_sleep(int64_t ticks);
+void thread_reinstate(struct thread *t, void *aux);
 
 /* Performs some operation on thread t, given auxiliary data AUX. */
 typedef void thread_action_func (struct thread *t, void *aux);

@@ -347,10 +347,10 @@ void thread_sleep(int64_t ticks){
 	  ASSERT (!intr_context ());
 
 	  if (cur != idle_thread){
-		  printf("blocking thread\n");
 		  cur->blocked_ticks = timer_ticks() + ticks;
+		  enum intr_level interruptStatus = intr_disable();
 		  thread_block();
-		  // do i need to remove the thread from readylist
+		  intr_set_level(interruptStatus);
 	  }
 }
 
@@ -359,19 +359,10 @@ void thread_sleep(int64_t ticks){
  * if thread ticks < current_time then unblock thread
  *
  */
-void thread_reinstate(){
-
-	struct list_elem *elem;
-
-	for (elem = list_begin(&all_list); elem != list_end(&all_list); elem = list_next(elem)){
-		// if element is blocked and blocked_ticks has passed then schedule the list
-		struct thread *t = list_entry (elem, struct thread, allelem);
-		if(t->status == THREAD_BLOCKED && t->blocked_ticks < timer_ticks()){
-			thread_unblock(t);
-		}
-
+void thread_reinstate(struct thread *t, void *aux UNUSED){
+	if(t->status == THREAD_BLOCKED && t->blocked_ticks <= timer_ticks()){
+		thread_unblock(t);
 	}
-
 }
 
 /* Invoke function 'func' on all threads, passing along 'aux'.
