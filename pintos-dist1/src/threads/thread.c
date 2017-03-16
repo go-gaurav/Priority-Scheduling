@@ -12,6 +12,7 @@
 #include "threads/synch.h"
 #include "threads/vaddr.h"
 #include "threads/thread.h"
+#include "devices/timer.h"
 
 #ifdef USERPROG
 #include "userprog/process.h"
@@ -324,20 +325,53 @@ thread_yield (void)
  * 1. Set current thread to sleep
  * 2. make idle thread active for number of ticks
  * 3. after 'ticks' set the sleeping thread to active
+ *
+ *
+ *At every tick, check if there are any ticks that need to be woken up
+ *
+ *
+ *Idea:1
+ * Stop thread and stop it from being scheduled again
+ * After ticks
+ * Restart thread and schedule it
+ * Make it work for multiple threads
+ *
+ * Idea:2
+ * Maintain list of sleeping threads
+ * and at a specific moment time,
+ * make the thread work
  */
 void thread_sleep(int64_t ticks){
 	  struct thread *cur = thread_current ();
-	  enum intr_level old_level;
 
 	  ASSERT (!intr_context ());
 
 	  if (cur != idle_thread){
+		  printf("blocking thread\n");
+		  cur->blocked_ticks = timer_ticks() + ticks;
 		  thread_block();
+		  // do i need to remove the thread from readylist
 	  }
-	  printf("thread still active");
-	  while (timer_elapsed (timer_ticks()) < ticks){
-	  }
-	  thread_unblock(cur);
+}
+
+/**
+ * Iterate over blocked threads and
+ * if thread ticks < current_time then unblock thread
+ *
+ */
+void thread_reinstate(){
+
+	struct list_elem *elem;
+
+	for (elem = list_begin(&all_list); elem != list_end(&all_list); elem = list_next(elem)){
+		// if element is blocked and blocked_ticks has passed then schedule the list
+		struct thread *t = list_entry (elem, struct thread, allelem);
+		if(t->status == THREAD_BLOCKED && t->blocked_ticks < timer_ticks()){
+			thread_unblock(t);
+		}
+
+	}
+
 }
 
 /* Invoke function 'func' on all threads, passing along 'aux'.
