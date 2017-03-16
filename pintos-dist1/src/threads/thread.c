@@ -31,6 +31,8 @@ static struct list ready_list;
    when they are first scheduled and removed when they exit. */
 static struct list all_list;
 
+static struct list blocked_list;       /* List element for blocked threads list. */
+
 /* Idle thread. */
 static struct thread *idle_thread;
 
@@ -95,6 +97,7 @@ thread_init (void)
   lock_init (&tid_lock);
   list_init (&ready_list);
   list_init (&all_list);
+  list_init(&blocked_list);
 
   /* Set up a thread structure for the running thread. */
   initial_thread = running_thread ();
@@ -350,8 +353,25 @@ void thread_sleep(int64_t ticks){
 		  cur->blocked_ticks = timer_ticks() + ticks;
 		  enum intr_level interruptStatus = intr_disable();
 		  thread_block();
+		  list_insert_ordered(&blocked_list, &cur -> elem, thread_comparator, NULL);
 		  intr_set_level(interruptStatus);
 	  }
+}
+
+
+
+/**
+ * Comparator for sorting blocked threads.
+ *
+ */
+static bool thread_comparator(const struct list_elem *elem, const struct list_elem *otherElem, void *aux UNUSED) {
+	ASSERT(elem != NULL);
+	ASSERT(otherElem != NULL);
+
+	const struct thread *thread = list_entry(elem, struct thread, elem);
+	const struct thread *otherThread = list_entry(otherElem, struct thread, elem);
+
+	return thread->blocked_ticks <= otherThread->blocked_ticks;
 }
 
 /**
@@ -360,7 +380,7 @@ void thread_sleep(int64_t ticks){
  *
  */
 void thread_reinstate(struct thread *t, void *aux UNUSED){
-	if(t->status == THREAD_BLOCKED && t->blocked_ticks <= timer_ticks()){
+	if(t->blocked_ticks <= timer_ticks()){
 		thread_unblock(t);
 	}
 }
@@ -378,6 +398,23 @@ thread_foreach (thread_action_func *func, void *aux)
        e = list_next (e))
     {
       struct thread *t = list_entry (e, struct thread, allelem);
+      func (t, aux);
+    }
+}
+
+/* Invoke function 'func' on all blocked threads, passing along 'aux'.
+   This function must be called with interrupts off. */
+void
+thread_blocked_foreach (thread_action_func *func, void *aux)
+{
+  struct list_elem *e;
+
+  ASSERT (intr_get_level () == INTR_OFF);
+
+  for (e = list_begin (&blocked_list); e != list_end (&blocked_list);
+       e = list_next (e))
+    {
+      struct thread *t = list_entry (e, struct thread, elem);
       func (t, aux);
     }
 }
