@@ -131,14 +131,13 @@ const char *thread_name (void);
 void thread_exit (void) NO_RETURN;
 void thread_yield (void);
 void thread_sleep(int64_t ticks);
-void thread_reinstate(struct thread *t, void *aux);
+void thread_reinstate();
 bool thread_comparator(const struct list_elem *elem, const struct list_elem *otherElem, void *aux);
 
 
 /* Performs some operation on thread t, given auxiliary data AUX. */
 typedef void thread_action_func (struct thread *t, void *aux);
 void thread_foreach (thread_action_func *, void *);
-void thread_blocked_foreach(thread_action_func *, void*);
 
 int thread_get_priority (void);
 void thread_set_priority (int);

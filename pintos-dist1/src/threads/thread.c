@@ -31,7 +31,7 @@ static struct list ready_list;
    when they are first scheduled and removed when they exit. */
 static struct list all_list;
 
-static struct list blocked_list;       /* List element for blocked threads list. */
+static struct list blocked_queue;       /* List element for blocked threads list. */
 
 /* Idle thread. */
 static struct thread *idle_thread;
@@ -97,7 +97,7 @@ thread_init (void)
   lock_init (&tid_lock);
   list_init (&ready_list);
   list_init (&all_list);
-  list_init(&blocked_list);
+  list_init(&blocked_queue);
 
   /* Set up a thread structure for the running thread. */
   initial_thread = running_thread ();
@@ -353,7 +353,7 @@ void thread_sleep(int64_t ticks){
 		  cur->blocked_ticks = timer_ticks() + ticks;
 		  enum intr_level interruptStatus = intr_disable();
 		  thread_block();
-		  list_insert_ordered(&blocked_list, &cur -> elem, thread_comparator, NULL);
+		  list_insert_ordered(&blocked_queue, &cur -> elem, thread_comparator, NULL);
 		  intr_set_level(interruptStatus);
 	  }
 }
@@ -379,10 +379,33 @@ static bool thread_comparator(const struct list_elem *elem, const struct list_el
  * if thread ticks < current_time then unblock thread
  *
  */
-void thread_reinstate(struct thread *t, void *aux UNUSED){
-	if(t->blocked_ticks <= timer_ticks()){
-		thread_unblock(t);
-	}
+void thread_reinstate ()
+{
+  // quit if blocked list is empty
+  if(list_empty(&blocked_queue)){
+	  return;
+  }
+  struct list_elem *elem;
+  struct thread *t;
+  enum intr_level interruptStatus = intr_disable();
+  for (elem = list_begin (&blocked_queue); elem != list_end (&blocked_queue); elem = list_next (elem)){
+      t = list_entry (elem, struct thread, elem);
+      if(t->blocked_ticks <= timer_ticks()){
+    	  elem = list_remove(elem);
+
+    	  thread_unblock(t);
+
+       } else {
+    	   /**
+    	    * we can break the for loop as the blocked queue is a priority queue.
+    	    * So after we iterate over the queue and if a thread is still blocked, then all other threads after it are blocked too.
+    	    */
+    	   break;
+       }
+
+    }
+
+  intr_set_level(interruptStatus);
 }
 
 /* Invoke function 'func' on all threads, passing along 'aux'.
@@ -402,22 +425,7 @@ thread_foreach (thread_action_func *func, void *aux)
     }
 }
 
-/* Invoke function 'func' on all blocked threads, passing along 'aux'.
-   This function must be called with interrupts off. */
-void
-thread_blocked_foreach (thread_action_func *func, void *aux)
-{
-  struct list_elem *e;
 
-  ASSERT (intr_get_level () == INTR_OFF);
-
-  for (e = list_begin (&blocked_list); e != list_end (&blocked_list);
-       e = list_next (e))
-    {
-      struct thread *t = list_entry (e, struct thread, elem);
-      func (t, aux);
-    }
-}
 
 /* Sets the current thread's priority to NEW_PRIORITY. */
 void
