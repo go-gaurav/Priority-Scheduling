@@ -353,6 +353,7 @@ void thread_sleep(int64_t ticks){
 		  cur->blocked_ticks = timer_ticks() + ticks;
 		  enum intr_level interruptStatus = intr_disable();
 		  thread_block();
+		  printf("inserting thread to blocked queue: %s\n", cur->name);
 		  list_insert_ordered(&blocked_queue, &cur -> elem, thread_comparator, NULL);
 		  intr_set_level(interruptStatus);
 	  }
@@ -383,6 +384,7 @@ void thread_reinstate ()
 {
   // quit if blocked list is empty
   if(list_empty(&blocked_queue)){
+	  printf("Return from empty blocked queue\n");
 	  return;
   }
   struct list_elem *elem;
@@ -391,6 +393,7 @@ void thread_reinstate ()
   for (elem = list_begin (&blocked_queue); elem != list_end (&blocked_queue); elem = list_next (elem)){
       t = list_entry (elem, struct thread, elem);
       if(t->blocked_ticks <= timer_ticks()){
+    	  printf("removing blocked thread: %s\n", t->name);
     	  elem = list_remove(elem);
 
     	  thread_unblock(t);
@@ -400,11 +403,12 @@ void thread_reinstate ()
     	    * we can break the for loop as the blocked queue is a priority queue.
     	    * So after we iterate over the queue and if a thread is still blocked, then all other threads after it are blocked too.
     	    */
+    	   printf("breaking from blocked queue loop\n");
     	   break;
        }
 
     }
-
+  printf("returning from thread reinstate\n");
   intr_set_level(interruptStatus);
 }
 

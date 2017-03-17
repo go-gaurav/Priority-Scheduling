@@ -177,6 +177,7 @@ timer_interrupt (struct intr_frame *args UNUSED)
 {
   ticks++;
   thread_tick();
+  printf("waking relevant threads\n");
   thread_reinstate();
 
 }
