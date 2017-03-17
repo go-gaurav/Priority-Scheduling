@@ -362,7 +362,7 @@ void thread_sleep(int64_t ticks){
 
 /**
  * Comparator for sorting blocked threads.
- *
+ * The blocked threads
  */
 static bool thread_comparator(const struct list_elem *elem, const struct list_elem *otherElem, void *aux UNUSED) {
 	ASSERT(elem != NULL);
