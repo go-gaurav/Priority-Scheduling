@@ -352,10 +352,11 @@ void thread_sleep(int64_t ticks){
 	  if (cur != idle_thread){
 		  cur->blocked_ticks = timer_ticks() + ticks;
 		  enum intr_level interruptStatus = intr_disable();
-		  thread_block();
+		 // thread_block();
 		  printf("inserting thread to blocked queue: %s\n", cur->name);
 		  list_insert_ordered(&blocked_queue, &cur -> elem, thread_comparator, NULL);
-		  intr_set_level(interruptStatus);
+thread_block();	  
+intr_set_level(interruptStatus);
 	  }
 }
 
@@ -365,7 +366,7 @@ void thread_sleep(int64_t ticks){
  * Comparator for sorting blocked threads.
  * The blocked threads
  */
-static bool thread_comparator(const struct list_elem *elem, const struct list_elem *otherElem, void *aux UNUSED) {
+bool thread_comparator(const struct list_elem *elem, const struct list_elem *otherElem, void *aux UNUSED) {
 	ASSERT(elem != NULL);
 	ASSERT(otherElem != NULL);
 
