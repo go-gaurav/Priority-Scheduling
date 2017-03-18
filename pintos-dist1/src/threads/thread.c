@@ -321,97 +321,71 @@ thread_yield (void)
   intr_set_level (old_level);
 }
 
+// Lab 1. Code Starts Here
 /**
- * Sleeps the current thread for ticks
- *
- * Idea is to set the thread to sleep
- * 1. Set current thread to sleep
- * 2. make idle thread active for number of ticks
- * 3. after 'ticks' set the sleeping thread to active
- *
- *
- *At every tick, check if there are any ticks that need to be woken up
- *
- *
- *Idea:1
- * Stop thread and stop it from being scheduled again
- * After ticks
- * Restart thread and schedule it
- * Make it work for multiple threads
- *
- * Idea:2
- * Maintain list of sleeping threads
- * and at a specific moment time,
- * make the thread work
+ * Sleeps the current (non idle) thread for ticks.
+ * The blocked thread is added to the blocked queue.
  */
-void thread_sleep(int64_t ticks){
-	  struct thread *cur = thread_current ();
+void thread_sleep(int64_t ticks) {
+	struct thread *cur = thread_current();
+	enum intr_level originalIntrLevel;
+	ASSERT(!intr_context());
 
-	  ASSERT (!intr_context ());
-
-	  if (cur != idle_thread){
-		  cur->blocked_ticks = timer_ticks() + ticks;
-		  enum intr_level interruptStatus = intr_disable();
-		 // thread_block();
-		  printf("inserting thread to blocked queue: %s\n", cur->name);
-		  list_insert_ordered(&blocked_queue, &cur -> elem, thread_comparator, NULL);
-thread_block();	  
-intr_set_level(interruptStatus);
-	  }
+	if (cur != idle_thread) {
+		// set the ticks the thread is blocked for
+		cur->blocked_ticks = timer_ticks() + ticks;
+		originalIntrLevel = intr_disable();
+		// add blocked thread to queue of blocked threads
+		list_insert_ordered(&blocked_queue, &cur->elem, thread_comparator, NULL);
+		thread_block();
+		intr_set_level(originalIntrLevel);
+	}
 }
-
-
 
 /**
  * Comparator for sorting blocked threads.
- * The blocked threads
+ * This method should be used for adding the blocked threads into the block priority queue.
+ * Thread with smaller blocked ticks has more priority than larger blocked ticks.
  */
-bool thread_comparator(const struct list_elem *elem, const struct list_elem *otherElem, void *aux UNUSED) {
-	ASSERT(elem != NULL);
-	ASSERT(otherElem != NULL);
-
+static bool thread_comparator(const struct list_elem *elem, const struct list_elem *otherElem, void *aux UNUSED) {
+	ASSERT(elem != NULL && otherElem != NULL);
 	const struct thread *thread = list_entry(elem, struct thread, elem);
 	const struct thread *otherThread = list_entry(otherElem, struct thread, elem);
-
 	return thread->blocked_ticks <= otherThread->blocked_ticks;
 }
 
 /**
- * Iterate over blocked threads and
- * if thread ticks < current_time then unblock thread
- *
+ * Iterate over blocked thread queue and
+ * unblock threads that have surpassed their blocked ticks.
  */
-void thread_reinstate ()
+void thread_reinstate (void)
 {
   // quit if blocked list is empty
   if(list_empty(&blocked_queue)){
-	  printf("Return from empty blocked queue\n");
 	  return;
   }
   struct list_elem *elem;
-  struct thread *t;
+  struct thread *thread;
+
+  // disable interrupts while looping through the blocked queue
   enum intr_level interruptStatus = intr_disable();
-  for (elem = list_begin (&blocked_queue); elem != list_end (&blocked_queue); elem = list_next (elem)){
-      t = list_entry (elem, struct thread, elem);
-      if(t->blocked_ticks <= timer_ticks()){
-    	  printf("removing blocked thread: %s\n", t->name);
-    	  elem = list_remove(elem);
 
-    	  thread_unblock(t);
-
-       } else {
-    	   /**
-    	    * we can break the for loop as the blocked queue is a priority queue.
-    	    * So after we iterate over the queue and if a thread is still blocked, then all other threads after it are blocked too.
-    	    */
-    	   printf("breaking from blocked queue loop\n");
-    	   break;
-       }
-
-    }
-  printf("returning from thread reinstate\n");
+  elem = list_begin(&blocked_queue);
+  while(elem != list_end(&blocked_queue)){
+	  thread = list_entry(elem, struct thread, elem); // get thread
+	  if(thread->blocked_ticks <= timer_ticks()){
+		  // unblock this thread as its passed its blocked ticks
+		  elem = list_remove(elem);
+		  thread_unblock(thread);
+	  } else {
+		  // we do not need to iterate over all blocked queue elements as the queue is a priority queue
+		  break;
+	  }
+  }
   intr_set_level(interruptStatus);
 }
+
+// Lab 1. Code Ends Here
 
 /* Invoke function 'func' on all threads, passing along 'aux'.
    This function must be called with interrupts off. */

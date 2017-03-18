@@ -130,10 +130,11 @@ const char *thread_name (void);
 
 void thread_exit (void) NO_RETURN;
 void thread_yield (void);
+// Lab 1. Code Starts Here
 void thread_sleep(int64_t ticks);
-void thread_reinstate();
-bool thread_comparator(const struct list_elem *elem, const struct list_elem *otherElem, void *aux);
-
+void thread_reinstate(void);
+static bool thread_comparator(const struct list_elem *elem, const struct list_elem *otherElem, void *aux);
+// Lab 1. Code Ends Here
 
 /* Performs some operation on thread t, given auxiliary data AUX. */
 typedef void thread_action_func (struct thread *t, void *aux);
