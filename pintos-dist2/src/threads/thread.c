@@ -73,6 +73,9 @@ static void schedule (void);
 void thread_schedule_tail (struct thread *prev);
 static tid_t allocate_tid (void);
 static bool thread_comparator(const struct list_elem *elem, const struct list_elem *otherElem, void *aux);
+// Lab 2: code starts here:
+static bool thread_priority_comparator(const struct list_elem *elem, const struct list_elem *otherElem, void *aux);
+// Lab 2: code ends here
 
 
 /* Initializes the threading system by transforming the code
@@ -242,9 +245,14 @@ thread_unblock (struct thread *t)
 
   old_level = intr_disable ();
   ASSERT (t->status == THREAD_BLOCKED);
-  list_push_back (&ready_list, &t->elem);
+  list_insert_ordered(&ready_list, &t->elem, thread_priority_comparator, NULL);
   t->status = THREAD_READY;
   intr_set_level (old_level);
+  // Lab 2: code begins here:
+  // why did I choose to put check here? Follow good practise and makes sense to put it here in unblock method?
+  if (t->priority > thread_current()->priority) {
+	thread_yield();
+  }
 }
 
 /* Returns the name of the running thread. */
@@ -312,13 +320,20 @@ thread_yield (void)
   ASSERT (!intr_context ());
 
   old_level = intr_disable ();
-  if (cur != idle_thread) 
-    list_push_back (&ready_list, &cur->elem);
+  if (cur != idle_thread) {
+    list_insert_ordered(&ready_list, &cur->elem, thread_priority_comparator, NULL);
+  }
   cur->status = THREAD_READY;
   schedule ();
   intr_set_level (old_level);
 }
 
+static bool thread_priority_comparator(const struct list_elem *elem, const struct list_elem *otherElem, void *aux UNUSED){
+	ASSERT(elem != NULL && otherElem != NULL);
+	const struct thread *thread = list_entry(elem, struct thread, elem);
+	const struct thread *otherThread = list_entry(otherElem, struct thread, elem);
+	return thread->priority > otherThread->priority;
+}
 
 // Lab 1. Code Starts Here
 /**
@@ -408,6 +423,17 @@ void
 thread_set_priority (int new_priority) 
 {
   thread_current ()->priority = new_priority;
+  // Lab 2. Code begins here
+  /**
+   * As we have changed the priority of the current thread.
+   * We need to sort the ready list and check if we need to yield
+   */
+  list_sort(&ready_list, thread_priority_comparator, NULL);
+  struct thread *head = list_entry(list_front(&ready_list), struct thread, elem);
+  if(thread_current()->priority < head->priority){
+	  thread_yield();
+  }
+
 }
 
 /* Returns the current thread's priority. */
@@ -526,7 +552,7 @@ init_thread (struct thread *t, const char *name, int priority)
   enum intr_level old_level;
 
   ASSERT (t != NULL);
-  ASSERT (PRI_MIN <= priority && priority <= PRI_MAX);
+  ASSERT (PRI_MIN <= priority && priority <= PRI_MAX); // Question: should it default to PRI_DEFAULT?
   ASSERT (name != NULL);
 
   memset (t, 0, sizeof *t);
@@ -537,6 +563,12 @@ init_thread (struct thread *t, const char *name, int priority)
   t->magic = THREAD_MAGIC;
 
   old_level = intr_disable ();
+  /**
+   * Lab 2. Code begins here:
+   * Instead of pushing the thread to the back of the queue,
+   * we add it add it as a priority queue
+   * TODO: Insert into ordered
+   */
   list_push_back (&all_list, &t->allelem);
   intr_set_level (old_level);
 }
