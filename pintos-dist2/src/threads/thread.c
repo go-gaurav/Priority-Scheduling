@@ -208,6 +208,10 @@ thread_create (const char *name, int priority,
 
   /* Add to run queue. */
   thread_unblock (t);
+  // why putting it here instead of thread_unblock()? Something to do with the return statement in this method?
+  if (t->priority > thread_current()->priority) {
+  	thread_yield();
+  }
 
   return tid;
 }
@@ -249,10 +253,8 @@ thread_unblock (struct thread *t)
   t->status = THREAD_READY;
   intr_set_level (old_level);
   // Lab 2: code begins here:
-  // why did I choose to put check here? Follow good practise and makes sense to put it here in unblock method?
-  if (t->priority > thread_current()->priority) {
-	thread_yield();
-  }
+  // why did I choose not to put check here? Follow good practise and makes sense to put it here in unblock method?
+  // caused an error somehow
 }
 
 /* Returns the name of the running thread. */
