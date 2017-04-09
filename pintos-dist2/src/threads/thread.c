@@ -209,10 +209,8 @@ thread_create (const char *name, int priority,
   /* Add to run queue. */
   thread_unblock (t);
   // why putting it here instead of thread_unblock()? Something to do with the return statement in this method?
- printf("checking for priority on thread_create\n"); 
-  if (priority > thread_current()->priority) {
-        printf("yielding thread as new priority thread is added\n");  
-	thread_yield();
+  if (t->priority > thread_current()->priority) {
+  	thread_yield();
   }
 
   return tid;
@@ -433,15 +431,13 @@ thread_set_priority (int new_priority)
    * We need to sort the ready list and check if we need to yield
    */
   if(!list_empty(&ready_list)){
-          printf("sorting ready_list");
 	  list_sort(&ready_list, thread_priority_comparator, NULL);
 	  struct thread *head = list_entry(list_front(&ready_list), struct thread, elem);
 	  if(thread_current()->priority < head->priority){
-                  printf("Thread is has more priority than current. So yield");
 		  thread_yield();
 	  }
   }
-printf("\n");
+
 }
 
 /* Returns the current thread's priority. */
