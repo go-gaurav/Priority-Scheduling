@@ -430,10 +430,12 @@ thread_set_priority (int new_priority)
    * As we have changed the priority of the current thread.
    * We need to sort the ready list and check if we need to yield
    */
-  list_sort(&ready_list, thread_priority_comparator, NULL);
-  struct thread *head = list_entry(list_front(&ready_list), struct thread, elem);
-  if(thread_current()->priority < head->priority){
-	  thread_yield();
+  if(!list_empty(&ready_list)){
+	  list_sort(&ready_list, thread_priority_comparator, NULL);
+	  struct thread *head = list_entry(list_front(&ready_list), struct thread, elem);
+	  if(thread_current()->priority < head->priority){
+		  thread_yield();
+	  }
   }
 
 }
