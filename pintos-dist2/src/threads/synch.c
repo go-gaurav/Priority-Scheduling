@@ -351,7 +351,12 @@ static bool sema_priority_comparator(const struct list_elem *elem, const struct 
   	return true;
   }
 
+  list_sort(&(sema->semaphore.waiters), thread_priority_comparator, NULL);
+
+  list_sort(&(otherSema -> semaphore.waiters), thread_priority_comparator, NULL);
+
   struct thread *thread = list_entry(list_front(&(sema -> semaphore.waiters)), struct thread, elem);
+
   struct thread *otherThread = list_entry(list_front(&(otherSema -> semaphore.waiters)), struct thread, elem);
 
   return thread -> priority > otherThread -> priority;
