@@ -302,6 +302,8 @@ cond_wait (struct condition *cond, struct lock *lock)
   
   sema_init (&waiter.semaphore, 0);
   list_insert_ordered(&cond->waiters, &waiter.elem, sema_priority_comparator, NULL);
+  struct thread *thread = list_entry(list_front(&cond.waiters), struct thread, elem);
+  printf("thread: %d\n", thread->priority);
   lock_release (lock);
   sema_down (&waiter.semaphore);
   lock_acquire (lock);
@@ -351,13 +353,9 @@ static bool sema_priority_comparator(const struct list_elem *elem, const struct 
   	return true;
   }
 
-  list_sort(&(sema->semaphore.waiters), thread_priority_comparator, NULL);
-
-  list_sort(&(otherSema -> semaphore.waiters), thread_priority_comparator, NULL);
-
   struct thread *thread = list_entry(list_front(&(sema -> semaphore.waiters)), struct thread, elem);
 
   struct thread *otherThread = list_entry(list_front(&(otherSema -> semaphore.waiters)), struct thread, elem);
-
+  printf("thread: %d. otherThread: %d\n", thread->priority, otherThread->priority);
   return thread -> priority > otherThread -> priority;
 }
