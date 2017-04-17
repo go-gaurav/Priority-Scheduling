@@ -126,6 +126,7 @@ const char *thread_name (void);
 
 void thread_exit (void) NO_RETURN;
 void thread_yield (void);
+void thread_yield_check(void);
 // Lab 1. Code Starts Here
 void thread_sleep(int64_t ticks);
 void thread_reinstate(void);
