@@ -132,6 +132,10 @@ void thread_sleep(int64_t ticks);
 void thread_reinstate(void);
 // Lab 1. Code Ends Here
 
+// Lab 2: code starts here:
+bool thread_priority_comparator(const struct list_elem *elem, const struct list_elem *otherElem, void *aux);
+// Lab 2: code ends here
+
 /* Performs some operation on thread t, given auxiliary data AUX. */
 typedef void thread_action_func (struct thread *t, void *aux);
 void thread_foreach (thread_action_func *, void *);

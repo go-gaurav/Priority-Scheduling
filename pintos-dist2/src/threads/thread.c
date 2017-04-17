@@ -73,9 +73,7 @@ static void schedule (void);
 void thread_schedule_tail (struct thread *prev);
 static tid_t allocate_tid (void);
 static bool thread_comparator(const struct list_elem *elem, const struct list_elem *otherElem, void *aux);
-// Lab 2: code starts here:
-static bool thread_priority_comparator(const struct list_elem *elem, const struct list_elem *otherElem, void *aux);
-// Lab 2: code ends here
+
 
 
 /* Initializes the threading system by transforming the code
@@ -337,7 +335,7 @@ void thread_yield_check(void) {
 	}
 }
 
-static bool thread_priority_comparator(const struct list_elem *elem, const struct list_elem *otherElem, void *aux UNUSED){
+bool thread_priority_comparator(const struct list_elem *elem, const struct list_elem *otherElem, void *aux UNUSED){
 	ASSERT(elem != NULL && otherElem != NULL);
 	const struct thread *thread = list_entry(elem, struct thread, elem);
 	const struct thread *otherThread = list_entry(otherElem, struct thread, elem);
