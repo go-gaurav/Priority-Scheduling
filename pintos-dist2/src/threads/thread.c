@@ -207,7 +207,6 @@ thread_create (const char *name, int priority,
   sf->ebp = 0;
 
   /* Add to run queue. */
-  printf("unblocking thread t:%d\n", t->priority);
   thread_unblock (t);
   enum intr_level old_level = intr_disable();
   thread_yield_check();
@@ -332,8 +331,6 @@ thread_yield (void)
 void thread_yield_check(void) {
 	if (!list_empty(&ready_list)) {
 		struct thread *head = list_entry(list_front(&ready_list), struct thread,elem);
-		printf("head thread : %d\n", head->priority);
-		printf("current thread: %d\n", thread_current()->priority);
 		if (thread_current()->priority < head->priority) {
 			thread_yield();
 		}
