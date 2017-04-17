@@ -302,8 +302,6 @@ cond_wait (struct condition *cond, struct lock *lock)
   
   sema_init (&waiter.semaphore, 0);
   list_insert_ordered(&cond->waiters, &waiter.elem, sema_priority_comparator, NULL);
-  struct semaphore_elem *semaElem = list_entry(list_front(&cond->waiters), struct thread, elem);
-  printf("semaphore length: %d\n", list_size(semaElem->semaphore.waiters));
   lock_release (lock);
   sema_down (&waiter.semaphore);
   lock_acquire (lock);
