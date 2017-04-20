@@ -32,7 +32,7 @@ bool lock_held_by_current_thread (const struct lock *);
 
 // LAB2:
 void revoke_priority(struct thread *thread);
-void donate_priority(struct thread *threadA, struct thread *threadB)
+void donate_priority(struct thread *threadA, struct thread *threadB);
 
 
 /* Condition variable. */
