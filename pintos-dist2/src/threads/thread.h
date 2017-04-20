@@ -95,7 +95,7 @@ struct thread
     int64_t blocked_ticks;              /* ticks till its blocked for */
 
     // LAB2: Priority Donation
-    bool priority_changed; 							/* Boolean for checking if priority has been donated to this thread */
+    bool priority_locked; 							/* Boolean for checking if priority has been donated to this thread */
 		int old_priority;  									/* Old priority value. NOTE this value should only be used if priority_received is true*/
 
 #ifdef USERPROG

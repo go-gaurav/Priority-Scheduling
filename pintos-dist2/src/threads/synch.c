@@ -224,13 +224,13 @@ lock_acquire (struct lock *lock)
 void donate_priority(struct thread *threadA, struct thread *threadB){
 	threadB->old_priority = threadB->priority;
   threadB->priority = threadA->priority;
-  threadB->priority_changed = true;
+  threadB->priority_locked = true;
 }
 
 void revoke_priority(struct thread *thread){
-	ASSERT(thread->priority_changed == true);
+	ASSERT(thread->priority_locked == true);
 	thread->priority = thread->old_priority;
-	thread->priority_changed = false;
+	thread->priority_locked = false;
 }
 
 /* Tries to acquires LOCK and returns true if successful or false
@@ -263,7 +263,7 @@ lock_release (struct lock *lock)
 {
   ASSERT (lock != NULL);
   ASSERT (lock_held_by_current_thread (lock));
-  if (lock->holder->priority_changed){
+  if (lock->holder->priority_locked){
   	revoke_priority(lock->holder);
   }
   lock->holder = NULL;
