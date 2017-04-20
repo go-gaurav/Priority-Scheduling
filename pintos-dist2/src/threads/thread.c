@@ -429,6 +429,10 @@ thread_foreach (thread_action_func *func, void *aux)
 void
 thread_set_priority (int new_priority) 
 {
+	// Lab2: Do not change priority if priority has been donated to the current thread
+	if(thread_current()->priority_changed == true){
+		return;
+	}
   thread_current ()->priority = new_priority;
   // Lab 2. Code begins here
   /**
