@@ -429,11 +429,8 @@ thread_foreach (thread_action_func *func, void *aux)
 void
 thread_set_priority (int new_priority) 
 {
-	printf("current_thread priority: %d\n", thread_current()->priority);
-	printf("current_thread old_priority: %d\n", thread_current()->old_priority);
-	printf("current_thread priority_locked: %d\n", thread_current()->priority_locked);
-	// Lab2: Do not change priority if new priority is less than current AND priority has been donated to the current thread
-	if(thread_current()->priority_locked == true && thread_current()->priority > new_priority){
+	// Lab2: Do not change priority if priority has been donated to the current thread
+	if(thread_current()->priority_locked == true){
 		return;
 	}
   thread_current ()->priority = new_priority;
@@ -577,8 +574,7 @@ init_thread (struct thread *t, const char *name, int priority)
   t->stack = (uint8_t *) t + PGSIZE;
   t->priority = priority;
   t->magic = THREAD_MAGIC;
-  t->old_priority = priority;
-  t->priority_locked = false;
+
   old_level = intr_disable ();
   /**
    * Lab 2. Code begins here:
