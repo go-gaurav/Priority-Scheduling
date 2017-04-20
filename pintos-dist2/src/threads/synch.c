@@ -255,8 +255,6 @@ struct semaphore_elem
   {
     struct list_elem elem;              /* List element. */
     struct semaphore semaphore;         /* This semaphore. */
-
-    int highest_priority; // highest priority in list element
   };
 
 /* Initializes condition variable COND.  A condition variable
