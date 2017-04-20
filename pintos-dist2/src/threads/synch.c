@@ -199,9 +199,38 @@ lock_acquire (struct lock *lock)
   ASSERT (lock != NULL);
   ASSERT (!intr_context ());
   ASSERT (!lock_held_by_current_thread (lock));
+  // if lock has a holder and the holder's priority is greater than current thread priority.
+  // then current thread must donate priority to the holder and test for yield.
+  // once the holder is done and releases lock, check if it was donated and if so set its priority to its old value
 
+  /**
+   * TODO:
+   * 1. boolean for checking if priority has been donated
+   * 2. value for the previous value of thread priority
+   *
+   * 3. Create method that takes in two threads and swaps the priorities. method should take of 1. and 2.
+   * 4. Create method that takes care of revoking a threads priority?
+   */
+  if(lock->holder != NULL && lock->holder->priority < thread_current()->priority){
+  	donate_priority(thread_current(), lock->holder);
+  }
   sema_down (&lock->semaphore);
-  lock->holder = thread_current ();
+  lock->holder = thread_current (); // lock holder is the current thread.
+}
+
+/**
+ * Donates threadA's priority to threadB
+ */
+void donate_priority(struct thread *threadA, struct thread *threadB){
+	threadB->old_priority = threadB->priority;
+  threadB->priority = threadA->priority;
+  threadB->priority_changed = true;
+}
+
+void revoke_priority(struct thread *thread){
+	ASSERT(thread->priority_changed == true);
+	thread->priority = thread->old_priority;
+	thread->priority_changed = false;
 }
 
 /* Tries to acquires LOCK and returns true if successful or false
@@ -234,7 +263,9 @@ lock_release (struct lock *lock)
 {
   ASSERT (lock != NULL);
   ASSERT (lock_held_by_current_thread (lock));
-
+  if (lock->holder->priority_changed){
+  	revoke_priority(lock->holder);
+  }
   lock->holder = NULL;
   sema_up (&lock->semaphore);
 }

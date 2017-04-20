@@ -94,6 +94,10 @@ struct thread
     struct list_elem elem;              /* List element. */
     int64_t blocked_ticks;              /* ticks till its blocked for */
 
+    // LAB2: Priority Donation
+    bool priority_changed; 							/* Boolean for checking if priority has been donated to this thread */
+		int old_priority;  									/* Old priority value. NOTE this value should only be used if priority_received is true*/
+
 #ifdef USERPROG
     /* Owned by userprog/process.c. */
     uint32_t *pagedir;                  /* Page directory. */
