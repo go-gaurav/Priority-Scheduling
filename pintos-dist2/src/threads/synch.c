@@ -226,14 +226,14 @@ void donate_priority(struct thread *fromThread, struct thread *toThread){
   toThread->old_priority = toThread->priority;
   toThread->priority = fromThread->priority;
   toThread->priority_locked = true;
-  thread_yield_check();
+//  thread_yield_check();
 }
 
 void revoke_priority(struct thread *thread){
 	ASSERT(thread->priority_locked == true);
 	thread->priority = thread->old_priority;
 	thread->priority_locked = false;
-	thread_yield_check();
+//	thread_yield_check();
 }
 
 /* Tries to acquires LOCK and returns true if successful or false
