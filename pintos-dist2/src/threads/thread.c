@@ -437,6 +437,9 @@ thread_set_priority (int new_priority)
       intr_set_level(interruptStatus);
       return;
   }
+  
+  printf("current thread piority locked: %d\n", thread_current()->priority_locked);
+  printf("current thread priority: %d\n", thread_current()->priority); 
   thread_current()->priority = new_priority;
   // Lab 2. Code begins here
   /**
