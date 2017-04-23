@@ -327,12 +327,13 @@ thread_yield (void)
 }
 
 void thread_yield_check(void) {
-	if (!list_empty(&ready_list)) {
-		struct thread *head = list_entry(list_front(&ready_list), struct thread,elem);
-		if (thread_current()->priority <= head->priority) {
-			thread_yield();
-		}
-	}
+  if (!list_empty(&ready_list)) {
+
+    struct thread *head = list_entry(list_front(&ready_list), struct thread,elem);
+    if (thread_current()->priority < head->priority) {
+	    thread_yield();
+    }
+  }
 }
 
 bool thread_priority_comparator(const struct list_elem *elem, const struct list_elem *otherElem, void *aux UNUSED){

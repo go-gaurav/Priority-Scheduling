@@ -266,7 +266,7 @@ lock_release (struct lock *lock)
 {
   ASSERT (lock != NULL);
   ASSERT (lock_held_by_current_thread (lock));
-  if (lock->holder->priority_locked == true){
+  if (thread_current()->priority_locked == true){
   	printf("revoking priority of lock holder from %d to %d\n", lock->holder->priority, lock->holder->old_priority);
   	revoke_priority(lock->holder);
   }
