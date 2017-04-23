@@ -96,7 +96,7 @@ struct thread
 
     // LAB2: Priority Donation
     bool priority_locked; 							/* Boolean for checking if priority has been donated to this thread */
-		int old_priority;  									/* Old priority value. NOTE this value should only be used if priority_received is true*/
+	int old_priority;  									/* Old priority value. NOTE this value should only be used if priority_received is true*/
 
 #ifdef USERPROG
     /* Owned by userprog/process.c. */

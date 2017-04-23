@@ -216,16 +216,16 @@ lock_acquire (struct lock *lock)
   	donate_priority(thread_current(), lock->holder);
   }
   sema_down (&lock->semaphore);
-  lock->holder = thread_current (); // lock holder is the current thread.
+  lock->holder = thread_current(); // lock holder is the current thread.
 }
 
 /**
- * Donates threadA's priority to threadB
+ * Donates fromThread's priority to toThread
  */
-void donate_priority(struct thread *threadA, struct thread *threadB){
-	threadB->old_priority = threadB->priority;
-  threadB->priority = threadA->priority;
-  threadB->priority_locked = true;
+void donate_priority(struct thread *fromThread, struct thread *toThread){
+  toThread->old_priority = toThread->priority;
+  toThread->priority = fromThread->priority;
+  toThread->priority_locked = true;
   thread_yield_check();
 }
 
@@ -266,7 +266,7 @@ lock_release (struct lock *lock)
 {
   ASSERT (lock != NULL);
   ASSERT (lock_held_by_current_thread (lock));
-  if (lock->holder->priority_locked){
+  if (lock->holder->priority_locked == true){
   	printf("revoking priority of lock holder from %d to %d\n", lock->holder->priority, lock->holder->old_priority);
   	revoke_priority(lock->holder);
   }

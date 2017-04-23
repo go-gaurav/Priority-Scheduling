@@ -329,7 +329,7 @@ thread_yield (void)
 void thread_yield_check(void) {
 	if (!list_empty(&ready_list)) {
 		struct thread *head = list_entry(list_front(&ready_list), struct thread,elem);
-		if (thread_current()->priority < head->priority) {
+		if (thread_current()->priority <= head->priority) {
 			thread_yield();
 		}
 	}
@@ -429,11 +429,14 @@ thread_foreach (thread_action_func *func, void *aux)
 void
 thread_set_priority (int new_priority) 
 {
-	// Lab2: Do not change priority if new priority is less than current AND priority has been donated to the current thread
+  // disable interrupts while looping through the blocked queue
+  enum intr_level interruptStatus = intr_disable();
+  // Lab2: Do not change priority if new priority is less than current AND priority has been donated to the current thread
   if(thread_current()->priority_locked == true && thread_current()->priority > new_priority){
-		return;
-	}
-  thread_current ()->priority = new_priority;
+      intr_set_level(interruptStatus);
+      return;
+  }
+  thread_current()->priority = new_priority;
   // Lab 2. Code begins here
   /**
    * As we have changed the priority of the current thread.
@@ -447,13 +450,14 @@ thread_set_priority (int new_priority)
 	  }
   }
 
+  intr_set_level(interruptStatus);
 }
 
 /* Returns the current thread's priority. */
 int
 thread_get_priority (void) 
 {
-  return thread_current ()->priority;
+  return thread_current()->priority;
 }
 
 /* Sets the current thread's nice value to NICE. */
