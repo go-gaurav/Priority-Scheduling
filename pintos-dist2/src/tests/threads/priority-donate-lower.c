@@ -45,7 +45,7 @@ static void
 acquire_thread_func (void *lock_) 
 {
   struct lock *lock = lock_;
-  print("thread trying to acquire lock: %s", thread_current()->name);
+  printf("thread trying to acquire lock: %s", thread_current()->name);
   lock_acquire (lock);
   msg ("acquire: got the lock");
   lock_release (lock);
