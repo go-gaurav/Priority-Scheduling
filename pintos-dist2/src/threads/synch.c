@@ -212,7 +212,6 @@ lock_acquire (struct lock *lock)
    * 4. Create method that takes care of revoking a threads priority?
    */
   if(lock->holder != NULL && lock->holder->priority < thread_current()->priority){
-  	printf("performing priority donation between current thread: %d, and lock_holder: %d\n", thread_current()->priority, lock->holder->priority);
   	donate_priority(thread_current(), lock->holder);
   }
   sema_down (&lock->semaphore);
@@ -267,7 +266,6 @@ lock_release (struct lock *lock)
   ASSERT (lock != NULL);
   ASSERT (lock_held_by_current_thread (lock));
   if (thread_current()->priority_locked == true){
-  	printf("revoking priority of lock holder from %d to %d\n", lock->holder->priority, lock->holder->old_priority);
   	revoke_priority(lock->holder);
   }
   lock->holder = NULL;
