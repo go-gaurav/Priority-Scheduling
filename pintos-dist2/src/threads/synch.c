@@ -215,7 +215,7 @@ lock_acquire (struct lock *lock)
   	// a thread has already acquired this lock. so we add this lock into the current's waiting_for_lock attribute
   	thread_current()->waiting_for_lock = lock;
   	// add current thread to lock holder's list of threads that are waiting for its lock
-  	list_insert_ordered(lock->holder->threads_waiting_for_lock, thread_current()->waitingElem, thread_priority_comparator, NULL);
+  	list_insert_ordered(&lock->holder->threads_waiting_for_lock, thread_current()->waitingElem, thread_priority_comparator, NULL);
   	// check if priority donations is needed
   	if(lock->holder->priority < thread_current()->priority){
   		// do priority donation/

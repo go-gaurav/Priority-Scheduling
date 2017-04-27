@@ -347,8 +347,8 @@ void sort_ready_list(void){
  * Iterate over thread's list of waiting threads for lock and remove them
  */
 void remove_threads_waiting_for_lock(struct lock *lock) {
-	if(!list_empty(thread_current()->threads_waiting_for_lock)){
-    struct list_elem *head = list_begin(thread_current()->threads_waiting_for_lock);
+	if(!list_empty(&thread_current()->threads_waiting_for_lock)){
+    struct list_elem *head = list_begin(&thread_current()->threads_waiting_for_lock);
     struct thread *thread;
     while(!is_tail(head)){
        thread = list_entry(head, struct thread, elem);
@@ -364,9 +364,9 @@ void remove_threads_waiting_for_lock(struct lock *lock) {
 /**
  * Checks if the thread priority needs to be updated based on the donated priorities.
  */
-void thread_priority_check() {
+void thread_priority_check(void) {
 	thread_current()->priority = thread_current()->initial_priority;
-	if (!list_empty(thread_current()->threads_waiting_for_lock)) {
+	if (!list_empty(&thread_current()->threads_waiting_for_lock)) {
 		// iterate over the priorities received and select max
 		struct thread* highest_donation_thread = list_entry(list_front(thread_current()->threads_waiting_for_lock), struct thread, waitingElem);
     // as our waiting threads are sorted by their priorities we only have to check the first most thread
@@ -611,7 +611,7 @@ init_thread (struct thread *t, const char *name, int priority)
   t->magic = THREAD_MAGIC;
   t->initial_priority = priority;
   // LAB2: multiple priority donate
-  list_init(t->threads_waiting_for_lock);
+  list_init(&t->threads_waiting_for_lock);
   t->waiting_for_lock = NULL;
   old_level = intr_disable ();
   list_push_back (&all_list, &t->allelem);
