@@ -212,7 +212,6 @@ lock_acquire (struct lock *lock)
    * 4. Create method that takes care of revoking a threads priority?
    */
   if(lock->holder != NULL && lock->holder->priority < thread_current()->priority){
-  	printf("performing priority donation between current thread: %d, and lock_holder: %d\n", thread_current()->priority, lock->holder->priority);
   	donate_priority(thread_current(), lock->holder);
   }
   sema_down (&lock->semaphore);
@@ -226,6 +225,9 @@ void donate_priority(struct thread *fromThread, struct thread *toThread){
   toThread->old_priority = toThread->priority;
   toThread->priority = fromThread->priority;
   toThread->priority_locked = true;
+  // sort ready list here so that when sema_down is happening it can choose the next to run thread. Alternatively, I can sort the ready_list in next_to_run however the downside may be overhead of sorting the list every time
+
+  thread_sort();
 //  thread_yield_check();
 }
 
@@ -266,10 +268,14 @@ lock_release (struct lock *lock)
 {
   ASSERT (lock != NULL);
   ASSERT (lock_held_by_current_thread (lock));
-  if (thread_current()->priority_locked == true){
-  	printf("revoking priority of lock holder from %d to %d\n", lock->holder->priority, lock->holder->old_priority);
-  	revoke_priority(lock->holder);
-  }
+	// check if lock has waiting priority that is greater than current priority
+    struct list waiters = lock->semaphore.waiters;
+	if (!list_empty(&waiters)) {
+		struct thread *head = list_entry(list_front(&waiters), struct thread, elem);
+		if (thread_current()->priority_locked == true && (head->priority >= thread_current()->priority)) {
+			revoke_priority(lock->holder);
+		}
+	}
   lock->holder = NULL;
   sema_up (&lock->semaphore);
 }

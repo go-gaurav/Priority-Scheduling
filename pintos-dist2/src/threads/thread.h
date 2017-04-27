@@ -140,6 +140,8 @@ void thread_reinstate(void);
 bool thread_priority_comparator(const struct list_elem *elem, const struct list_elem *otherElem, void *aux);
 // Lab 2: code ends here
 
+void thread_sort(void);
+
 /* Performs some operation on thread t, given auxiliary data AUX. */
 typedef void thread_action_func (struct thread *t, void *aux);
 void thread_foreach (thread_action_func *, void *);
