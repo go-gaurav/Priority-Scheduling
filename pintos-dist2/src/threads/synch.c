@@ -211,28 +211,21 @@ lock_acquire (struct lock *lock)
    * 3. Create method that takes in two threads and swaps the priorities. method should take of 1. and 2.
    * 4. Create method that takes care of revoking a threads priority?
    */
-  if(lock->holder != NULL && lock->holder->priority < thread_current()->priority){
-  	donate_priority(thread_current(), lock->holder);
+  if(lock->holder != NULL){
+  	// a thread has already acquired this lock. so we add this lock into the current's waiting_for_lock attribute
+  	thread_current()->waiting_for_lock = lock;
+  	// add current thread to lock holder's list of threads that are waiting for its lock
+  	list_insert_ordered(lock->holder->threads_waiting_for_lock, thread_current()->waitingElem, thread_priority_comparator, NULL);
+  	// check if priority donations is needed
+  	if(lock->holder->priority < thread_current()->priority){
+  		// do priority donation/
+  		lock->holder->priority = thread_current()->priority;
+  	}
+
   }
   sema_down (&lock->semaphore);
   lock->holder = thread_current(); // lock holder is the current thread.
-}
-
-/**
- * Donates fromThread's priority to toThread
- */
-void donate_priority(struct thread *fromThread, struct thread *toThread){
-  toThread->old_priority = toThread->priority;
-  toThread->priority = fromThread->priority;
-  toThread->priority_locked = true;
-//  thread_yield_check();
-}
-
-void revoke_priority(struct thread *thread){
-	ASSERT(thread->priority_locked == true);
-	thread->priority = thread->old_priority;
-	thread->priority_locked = false;
-//	thread_yield_check();
+  thread_current()->waiting_for_lock = NULL;
 }
 
 /* Tries to acquires LOCK and returns true if successful or false
@@ -265,9 +258,10 @@ lock_release (struct lock *lock)
 {
   ASSERT (lock != NULL);
   ASSERT (lock_held_by_current_thread (lock));
-  if (thread_current()->priority_locked == true){
-  	revoke_priority(lock->holder);
-  }
+
+  remove_threads_waiting_for_lock(lock);
+  thread_priority_check();
+
   lock->holder = NULL;
   sema_up (&lock->semaphore);
 }

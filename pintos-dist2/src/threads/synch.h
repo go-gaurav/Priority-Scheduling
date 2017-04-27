@@ -30,11 +30,6 @@ bool lock_try_acquire (struct lock *);
 void lock_release (struct lock *);
 bool lock_held_by_current_thread (const struct lock *);
 
-// LAB2:
-void revoke_priority(struct thread *thread);
-void donate_priority(struct thread *threadA, struct thread *threadB);
-
-
 /* Condition variable. */
 struct condition 
   {

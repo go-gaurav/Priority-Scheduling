@@ -328,12 +328,53 @@ thread_yield (void)
 
 void thread_yield_check(void) {
   if (!list_empty(&ready_list)) {
-
+  	// sanity check to make sure that the ready list is sorted
+    list_sort(&ready_list, thread_priority_comparator, NULL);
     struct thread *head = list_entry(list_front(&ready_list), struct thread,elem);
     if (thread_current()->priority < head->priority) {
 	    thread_yield();
     }
   }
+}
+
+void sort_ready_list(void){
+	if(!list_empty(&ready_list)){
+		list_sort(&ready_list, thread_priority_comparator, NULL);
+	}
+}
+
+/**
+ * Iterate over thread's list of waiting threads for lock and remove them
+ */
+void remove_threads_waiting_for_lock(struct lock *lock) {
+	if(!list_empty(thread_current()->threads_waiting_for_lock)){
+    struct list_elem *head = list_begin(thread_current()->threads_waiting_for_lock);
+    struct thread *thread;
+    while(!is_tail(head)){
+       thread = list_entry(head, struct thread, elem);
+       if(thread->waiting_for_lock == lock){
+           head = list_remove(thread);
+       } else {
+      	 head = list_next(thread);
+       }
+    }
+	}
+}
+
+/**
+ * Checks if the thread priority needs to be updated based on the donated priorities.
+ */
+void thread_priority_check() {
+	thread_current()->priority = thread_current()->initial_priority;
+	if (!list_empty(thread_current()->threads_waiting_for_lock)) {
+		// iterate over the priorities received and select max
+		struct thread* highest_donation_thread = list_entry(list_front(thread_current()->threads_waiting_for_lock), struct thread, waitingElem);
+    // as our waiting threads are sorted by their priorities we only have to check the first most thread
+		if (highest_donation_thread->priority > thread_current()->priority) {
+			thread_current()->priority = highest_donation_thread->priority;
+		}
+	}
+
 }
 
 bool thread_priority_comparator(const struct list_elem *elem, const struct list_elem *otherElem, void *aux UNUSED){
@@ -432,24 +473,13 @@ thread_set_priority (int new_priority)
 {
   // disable interrupts while looping through the blocked queue
   enum intr_level interruptStatus = intr_disable();
-  // Lab2: Do not change priority if new priority is less than current AND priority has been donated to the current thread
-  if(thread_current()->priority_locked == true && thread_current()->priority > new_priority){
-      intr_set_level(interruptStatus);
-      return;
-  }
   thread_current()->priority = new_priority;
   // Lab 2. Code begins here
   /**
    * As we have changed the priority of the current thread.
    * We need to sort the ready list and check if we need to yield
    */
-  if(!list_empty(&ready_list)){
-	  list_sort(&ready_list, thread_priority_comparator, NULL);
-	  struct thread *head = list_entry(list_front(&ready_list), struct thread, elem);
-	  if(thread_current()->priority < head->priority){
-		  thread_yield();
-	  }
-  }
+  thread_yield_check();
 
   intr_set_level(interruptStatus);
 }
@@ -579,16 +609,11 @@ init_thread (struct thread *t, const char *name, int priority)
   t->stack = (uint8_t *) t + PGSIZE;
   t->priority = priority;
   t->magic = THREAD_MAGIC;
-  t->old_priority = priority;
-  t->priority_locked = false;
-
+  t->initial_priority = priority;
+  // LAB2: multiple priority donate
+  list_init(t->threads_waiting_for_lock);
+  t->waiting_for_lock = NULL;
   old_level = intr_disable ();
-  /**
-   * Lab 2. Code begins here:
-   * Instead of pushing the thread to the back of the queue,
-   * we add it add it as a priority queue
-   * TODO: Insert into ordered
-   */
   list_push_back (&all_list, &t->allelem);
   intr_set_level (old_level);
 }
@@ -616,8 +641,10 @@ next_thread_to_run (void)
 {
   if (list_empty (&ready_list))
     return idle_thread;
-  else
+  else{
+//  	sort_ready_list(); // probably don't need this. Keeping it as a comment here for future reference.
     return list_entry (list_pop_front (&ready_list), struct thread, elem);
+  }
 }
 
 /* Completes a thread switch by activating the new thread's page
