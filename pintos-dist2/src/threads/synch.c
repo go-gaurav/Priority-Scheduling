@@ -202,7 +202,6 @@ lock_acquire (struct lock *lock)
   // if lock has a holder and the holder's priority is greater than current thread priority.
   // then current thread must donate priority to the holder and test for yield.
   // once the holder is done and releases lock, check if it was donated and if so set its priority to its old value
-
   /**
    * TODO:
    * 1. boolean for checking if priority has been donated
@@ -211,15 +210,16 @@ lock_acquire (struct lock *lock)
    * 3. Create method that takes in two threads and swaps the priorities. method should take of 1. and 2.
    * 4. Create method that takes care of revoking a threads priority?
    */
-  if(lock->holder != NULL){
+  if(lock->holder){
   	// a thread has already acquired this lock. so we add this lock into the current's waiting_for_lock attribute
   	thread_current()->waiting_for_lock = lock;
   	// add current thread to lock holder's list of threads that are waiting for its lock
-  	list_insert_ordered(&lock->holder->threads_waiting_for_lock, thread_current()->waitingElem, thread_priority_comparator, NULL);
+  	list_insert_ordered(&lock->holder->threads_waiting_for_lock, &thread_current()->waiting_thread_elem, thread_priority_comparator, NULL);
   	// check if priority donations is needed
   	if(lock->holder->priority < thread_current()->priority){
   		// do priority donation/
   		lock->holder->priority = thread_current()->priority;
+  		lock->holder->priority_changed_by_donation = true;
   	}
 
   }
@@ -258,12 +258,22 @@ lock_release (struct lock *lock)
 {
   ASSERT (lock != NULL);
   ASSERT (lock_held_by_current_thread (lock));
+  enum intr_level old_level = intr_disable ();
 
   remove_threads_waiting_for_lock(lock);
+  thread_current()->priority_changed_by_donation = false;
   thread_priority_check();
 
+//  if (!list_empty (&lock->semaphore.waiters)){
+//  // only perform revocation and if there are waiting threads for lock
+//      struct thread *head = list_entry(list_front(&lock->semaphore.waiters), struct thread, elem);
+//    if (remove_threads_waiting_for_lock (lock)&& (head->priority >= thread_current ()->priority)){
+//	  thread_priority_check ();
+//	}
+//  }
   lock->holder = NULL;
   sema_up (&lock->semaphore);
+  intr_set_level (old_level);
 }
 
 /* Returns true if the current thread holds LOCK, false
@@ -276,7 +286,7 @@ lock_held_by_current_thread (const struct lock *lock)
 
   return lock->holder == thread_current ();
 }
-
+
 /* One semaphore in a list. */
 struct semaphore_elem
   {
