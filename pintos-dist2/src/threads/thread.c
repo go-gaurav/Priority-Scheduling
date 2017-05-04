@@ -495,6 +495,7 @@ thread_set_priority (int new_priority)
   // disable interrupts while looping through the blocked queue
   enum intr_level interruptStatus = intr_disable();
 
+  int old_priority = thread_current()->priority;
 
   thread_current()->initial_priority = new_priority;
   // will not change priority if its lower than a donated priority received
@@ -503,7 +504,6 @@ thread_set_priority (int new_priority)
   }
   // update priority and initial priority
   thread_current()->priority = new_priority;
-  int old_priority = thread_current()->priority;
 
   // yield check
   if(old_priority > thread_current()->priority){
