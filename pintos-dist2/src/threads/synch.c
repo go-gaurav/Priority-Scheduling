@@ -221,20 +221,21 @@ lock_acquire (struct lock *lock)
 
   	struct thread *t = thread_current();
   	// do nested priority donation/
+  	struct lock *t_lock = lock;
   	do{
-  		if(!lock->holder){
+  		if(!t_lock->holder){
   			break;
   		}
-  		if (lock->holder->priority >= t->priority){
+  		if (t_lock->holder->priority >= t->priority){
   			break;
   		}
   		// do priority donation
-  		lock->holder->priority = t->priority;
-  		lock->holder->priority_changed_by_donation = true;
+  		t_lock->holder->priority = t->priority;
+  		t_lock->holder->priority_changed_by_donation = true;
 
   		t = lock->holder;
-  		lock = t->waiting_for_lock;
-  	} while(lock);
+  		t_lock = t->waiting_for_lock;
+  	} while(t_lock);
 
   }
   sema_down (&lock->semaphore);
