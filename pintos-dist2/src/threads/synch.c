@@ -218,11 +218,24 @@ lock_acquire (struct lock *lock)
   	// add current thread to lock holder's list of threads that are waiting for its lock
   	list_insert_ordered(&lock->holder->threads_waiting_for_lock, &thread_current()->waiting_thread_elem, thread_priority_comparator, NULL);
   	// check if priority donations is needed
-  	if(lock->holder->priority < thread_current()->priority){
-  		// do priority donation/
-  		lock->holder->priority = thread_current()->priority;
-  		lock->holder->priority_changed_by_donation = true;
-  	}
+
+  	struct thread *t = thread_current();
+  	// do nested priority donation/
+  	struct lock *t_lock = lock;
+  	do{
+  		if(!t_lock->holder){
+  			break;
+  		}
+  		if (t_lock->holder->priority >= t->priority){
+  			break;
+  		}
+  		// do priority donation
+  		t_lock->holder->priority = t->priority;
+  		t_lock->holder->priority_changed_by_donation = true;
+
+  		t = lock->holder;
+  		t_lock = t->waiting_for_lock;
+  	} while(t_lock);
 
   }
   sema_down (&lock->semaphore);
