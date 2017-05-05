@@ -251,6 +251,7 @@ thread_unblock (struct thread *t)
   // Lab 2: code begins here:
   // why did I choose not to put check here? Follow good practise and makes sense to put it here in unblock method?
   // caused an error somehow
+  // TODO: CHECK WITH TUTOR/LECTURER on why this doesn't work.
 }
 
 /* Returns the name of the running thread. */
@@ -329,6 +330,7 @@ thread_yield (void)
 void thread_yield_check(void) {
   if (!list_empty(&ready_list)) {
   	// sanity check to make sure that the ready list is sorted
+  	// TODO: Check if this can be removed.
     list_sort(&ready_list, thread_priority_comparator, NULL);
     struct thread *head = list_entry(list_front(&ready_list), struct thread,elem);
     if (thread_current()->priority < head->priority) {
@@ -337,38 +339,33 @@ void thread_yield_check(void) {
   }
 }
 
-void sort_ready_list(void){
-	if(!list_empty(&ready_list)){
-		list_sort(&ready_list, thread_priority_comparator, NULL);
-	}
-}
-
 /**
  * Iterate over thread's list of waiting threads for lock and remove them
  */
 /*
+// TODO: check if this method will work
 void remove_threads_waiting_for_lock(struct lock *lock) {
-	if(!list_empty(&thread_current()->threads_waiting_for_lock)){
-    struct list_elem *head = list_begin(&thread_current()->threads_waiting_for_lock);
+	if(!list_empty(&thread_current()->waiting_threads)){
+    struct list_elem *head = list_begin(&thread_current()->waiting_threads);
     struct thread *thread;
-    while(head != list_end(&thread_current()->threads_waiting_for_lock)){
-       thread = list_entry(head, struct thread, elem);
-       if(thread->waiting_for_lock == lock){
-           head = list_remove(head);
-       } else {
-      	 head = list_next(head);
-       }
+    while(head != list_end(&thread_current()->waiting_threads)){
+      thread = list_entry(head, struct thread, waiting_thread_elem);
+      if(thread->waiting_for_lock == lock){
+        head = list_remove(head);
+      } else {
+       head = list_next(head);
+      }
     }
 	}
 }
 
 */
 
-bool remove_threads_waiting_for_lock(struct lock *lock){
+void remove_threads_waiting_for_lock(struct lock *lock){
   bool threads_removed = false;
-  struct list_elem *e = list_begin(&thread_current()->threads_waiting_for_lock);
+  struct list_elem *e = list_begin(&thread_current()->waiting_threads);
     struct list_elem *next;
-    while (e != list_end(&thread_current()->threads_waiting_for_lock)) {
+    while (e != list_end(&thread_current()->waiting_threads)) {
       struct thread *t = list_entry(e, struct thread, waiting_thread_elem);
       next = list_next(e);
       if (t->waiting_for_lock == lock) {
@@ -378,7 +375,6 @@ bool remove_threads_waiting_for_lock(struct lock *lock){
       e = next;
     }
 
-    return threads_removed;
 }
 
 /**
@@ -386,10 +382,10 @@ bool remove_threads_waiting_for_lock(struct lock *lock){
  */
 void thread_priority_check(void) {
 	thread_current()->priority = thread_current()->initial_priority;
-	if (!list_empty(&thread_current()->threads_waiting_for_lock)) {
+	if (!list_empty(&thread_current()->waiting_threads)) {
 		// check if waiting thread has thread with higher priority than initial_priority.
 		// If so then it must have donated its priority to the current thread.
-		struct thread* highest_donation_thread = list_entry(list_front(&thread_current()->threads_waiting_for_lock), struct thread, waiting_thread_elem);
+		struct thread* highest_donation_thread = list_entry(list_front(&thread_current()->waiting_threads), struct thread, waiting_thread_elem);
     // as our waiting threads are sorted by their priorities we only have to check the first most thread
 		if (highest_donation_thread->priority > thread_current()->priority) {
 			thread_current()->priority = highest_donation_thread->priority;
@@ -488,7 +484,9 @@ thread_foreach (thread_action_func *func, void *aux)
     }
 }
 
-/* Sets the current thread's priority to NEW_PRIORITY. */
+/* Sets the current thread's priority to NEW_PRIORITY.
+ * TODO: Write how if new priority received is greater than donated priority received isn't handled
+ */
 void
 thread_set_priority (int new_priority)
 {
@@ -498,26 +496,17 @@ thread_set_priority (int new_priority)
   int old_priority = thread_current()->priority;
 
   thread_current()->initial_priority = new_priority;
-  // will not change priority if its lower than a donated priority received
+  // do not change priority if its lower than a donated priority received
   if(thread_current()->priority_changed_by_donation == true && new_priority < thread_current()->priority){
 	  return;
   }
-  // update priority and initial priority
+  // update priority as it is safe to do so now
   thread_current()->priority = new_priority;
 
   // yield check
   if(old_priority > thread_current()->priority){
 	  thread_yield_check();
   }
-
-
-//  thread_current()->priority = new_priority;
-  // Lab 2. Code begins here
-  /**
-   * As we have changed the priority of the current thread.
-   * We need to sort the ready list and check if we need to yield
-   */
-//  thread_yield_check();
 
   intr_set_level(interruptStatus);
 }
@@ -649,7 +638,7 @@ init_thread (struct thread *t, const char *name, int priority)
   t->magic = THREAD_MAGIC;
   t->initial_priority = priority;
   // LAB2: multiple priority donate
-  list_init(&t->threads_waiting_for_lock);
+  list_init(&t->waiting_threads);
   t->waiting_for_lock = NULL;
   old_level = intr_disable ();
   list_push_back (&all_list, &t->allelem);

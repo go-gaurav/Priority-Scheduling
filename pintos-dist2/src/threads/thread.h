@@ -97,7 +97,7 @@ struct thread
     // LAB2: Priority Donation
     int initial_priority;  									/* Old priority value. NOTE this value should only be used if priority_received is true*/
     bool priority_changed_by_donation; /* convience boolean for determining if the priority of thread has changed by way of donation from other threads */
-    struct list threads_waiting_for_lock; /* List of threads that have donated priorities to this thread*/
+    struct list waiting_threads; /* List of threads that have donated priorities to this thread*/
     struct list_elem waiting_thread_elem; /* list elements for thread_waiting_for_lock*/
     struct lock *waiting_for_lock; /* The lock the thread is waiting for*/
 
@@ -141,9 +141,8 @@ void thread_reinstate(void);
 
 // Lab 2: code starts here:
 bool thread_priority_comparator(const struct list_elem *elem, const struct list_elem *otherElem, void *aux);
-void sort_ready_list(void);
 // Lab 2: code ends here
-bool remove_threads_waiting_for_lock(struct lock *lock);
+void remove_threads_waiting_for_lock(struct lock *lock);
 
 
 void thread_priority_check(void);

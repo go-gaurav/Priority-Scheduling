@@ -201,24 +201,15 @@ lock_acquire (struct lock *lock)
   ASSERT (lock != NULL);
   ASSERT (!intr_context ());
   ASSERT (!lock_held_by_current_thread (lock));
-  // if lock has a holder and the holder's priority is greater than current thread priority.
-  // then current thread must donate priority to the holder and test for yield.
-  // once the holder is done and releases lock, check if it was donated and if so set its priority to its old value
-  /**
-   * TODO:
-   * 1. boolean for checking if priority has been donated
-   * 2. value for the previous value of thread priority
-   *
-   * 3. Create method that takes in two threads and swaps the priorities. method should take of 1. and 2.
-   * 4. Create method that takes care of revoking a threads priority?
-   */
+  // TODO: turn these into methods for thread
+  // TODO: Mention why priority donation is happening in this method rather than sema_down. May be because this method deals with locks so it encapsulates the method parameter
   if(lock->holder){
-  	// a thread has already acquired this lock. so we add this lock into the current's waiting_for_lock attribute
+  	// another thread has already acquired this lock. so we add this lock into the current's waiting_for_lock attribute
   	thread_current()->waiting_for_lock = lock;
-  	// add current thread to lock holder's list of threads that are waiting for its lock
-  	list_insert_ordered(&lock->holder->threads_waiting_for_lock, &thread_current()->waiting_thread_elem, thread_priority_comparator, NULL);
-  	// check if priority donations is needed
+  	// add current thread to lock holder's list of threads that are waiting for the lock
+  	list_insert_ordered(&lock->holder->waiting_threads, &thread_current()->waiting_thread_elem, thread_priority_comparator, NULL);
 
+  	// check if priority donations is needed
   	struct thread *t = thread_current();
   	// do nested priority donation/
   	struct lock *t_lock = lock;
@@ -235,7 +226,7 @@ lock_acquire (struct lock *lock)
 
   		t = t_lock->holder;
   		t_lock = t->waiting_for_lock;
-  	} while(t_lock);
+  	} while(t_lock); //TODO: check if while(t_lock && t_lock->holder) will make it simpler
 
   }
   sema_down (&lock->semaphore);
