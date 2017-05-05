@@ -233,7 +233,7 @@ lock_acquire (struct lock *lock)
   		t_lock->holder->priority = t->priority;
   		t_lock->holder->priority_changed_by_donation = true;
 
-  		t = lock->holder;
+  		t = t_lock->holder;
   		t_lock = t->waiting_for_lock;
   	} while(t_lock);
 
