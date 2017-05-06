@@ -373,39 +373,19 @@ void thread_perform_priority_donation(struct lock *lock, struct thread* t){
 /**
  * Iterate over thread's list of waiting threads for lock and remove them
  */
-/*
-// TODO: check if this method will work
-void remove_threads_waiting_for_lock(struct lock *lock) {
-	if(!list_empty(&thread_current()->waiting_threads)){
-    struct list_elem *head = list_begin(&thread_current()->waiting_threads);
-    struct thread *thread;
-    while(head != list_end(&thread_current()->waiting_threads)){
-      thread = list_entry(head, struct thread, waiting_thread_elem);
-      if(thread->waiting_for_lock == lock){
-        head = list_remove(head);
-      } else {
-       head = list_next(head);
-      }
-    }
-	}
-}
-
-*/
-
 void thread_remove_threads_waiting_for_lock(struct lock *lock){
-  bool threads_removed = false;
-  struct list_elem *e = list_begin(&thread_current()->waiting_threads);
-    struct list_elem *next;
-    while (e != list_end(&thread_current()->waiting_threads)) {
-      struct thread *t = list_entry(e, struct thread, waiting_thread_elem);
-      next = list_next(e);
-      if (t->waiting_for_lock == lock) {
-        list_remove(e);
-        threads_removed = true;
-      }
-      e = next;
-    }
-
+	if (!list_empty(&thread_current()->waiting_threads)) {
+		struct list_elem *head = list_begin(&thread_current()->waiting_threads);
+		struct thread *thread;
+		while (head != list_end(&thread_current()->waiting_threads)) {
+			thread = list_entry(head, struct thread, waiting_thread_elem);
+			if (thread->waiting_for_lock == lock) {
+				head = list_remove(head);
+			} else {
+				head = list_next(head);
+			}
+		}
+	}
 }
 
 /**
