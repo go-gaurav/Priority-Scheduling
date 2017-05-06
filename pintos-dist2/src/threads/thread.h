@@ -142,10 +142,12 @@ void thread_reinstate(void);
 // Lab 2: code starts here:
 bool thread_priority_comparator(const struct list_elem *elem, const struct list_elem *otherElem, void *aux);
 // Lab 2: code ends here
-void remove_threads_waiting_for_lock(struct lock *lock);
+void thread_remove_threads_waiting_for_lock(struct lock *lock);
+void thread_set_waiting_for_lock(struct lock *lock);
+void thread_unset_waiting_for_lock();
 
 
-void thread_priority_check(void);
+void thread_update_priority(void);
 
 /* Performs some operation on thread t, given auxiliary data AUX. */
 typedef void thread_action_func (struct thread *t, void *aux);

@@ -339,6 +339,37 @@ void thread_yield_check(void) {
   }
 }
 
+void thread_set_waiting_for_lock(struct lock *lock){
+	thread_current()->waiting_for_lock = lock;
+}
+
+void thread_unset_waiting_for_lock(){
+	thread_current()->waiting_for_lock = NULL;
+}
+
+void thread_perform_priority_donation(struct lock *lock, struct thread* t){
+	/**
+ 	 * Only perform priority donation if
+ 	 * 	1. lock exists,
+ 	 * 	2. lock has a holder and
+ 	 * 	3. the lock holder's priority is less than thread t's priority
+ 	 *
+ 	 * 	If either one of these requirements are not met, then we have reached the base case
+	 */
+  if(lock && lock->holder && lock->holder->priority < t->priority){
+  	// perform priority donation
+    lock->holder->priority = t->priority;
+    lock->holder->priority_changed_by_donation = true;
+
+    t = lock->holder;
+    lock = t->waiting_for_lock;
+    thread_perform_priority_donation(lock, t);
+  } else {
+  	// base case
+  	return;
+  }
+}
+
 /**
  * Iterate over thread's list of waiting threads for lock and remove them
  */
@@ -361,7 +392,7 @@ void remove_threads_waiting_for_lock(struct lock *lock) {
 
 */
 
-void remove_threads_waiting_for_lock(struct lock *lock){
+void thread_remove_threads_waiting_for_lock(struct lock *lock){
   bool threads_removed = false;
   struct list_elem *e = list_begin(&thread_current()->waiting_threads);
     struct list_elem *next;
@@ -380,7 +411,7 @@ void remove_threads_waiting_for_lock(struct lock *lock){
 /**
  * Checks if the thread priority needs to be updated based on the donated priorities.
  */
-void thread_priority_check(void) {
+void thread_update_priority(void) {
 	thread_current()->priority = thread_current()->initial_priority;
 	if (!list_empty(&thread_current()->waiting_threads)) {
 		// check if waiting thread has thread with higher priority than initial_priority.
