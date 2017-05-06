@@ -144,7 +144,7 @@ bool thread_priority_comparator(const struct list_elem *elem, const struct list_
 // Lab 2: code ends here
 void thread_remove_threads_waiting_for_lock(struct lock *lock);
 void thread_set_waiting_for_lock(struct lock *lock);
-void thread_unset_waiting_for_lock();
+void thread_unset_waiting_for_lock(void);
 
 
 void thread_update_priority(void);

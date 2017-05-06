@@ -343,7 +343,7 @@ void thread_set_waiting_for_lock(struct lock *lock){
 	thread_current()->waiting_for_lock = lock;
 }
 
-void thread_unset_waiting_for_lock(){
+void thread_unset_waiting_for_lock(void){
 	thread_current()->waiting_for_lock = NULL;
 }
 
