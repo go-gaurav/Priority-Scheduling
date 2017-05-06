@@ -94,6 +94,13 @@ struct thread
     struct list_elem elem;              /* List element. */
     int64_t blocked_ticks;              /* ticks till its blocked for */
 
+    // LAB2: Priority Donation
+    int initial_priority;  									/* Old priority value. NOTE this value should only be used if priority_received is true*/
+    bool priority_changed_by_donation; /* convience boolean for determining if the priority of thread has changed by way of donation from other threads */
+    struct list waiting_threads; /* List of threads that have donated priorities to this thread*/
+    struct list_elem waiting_thread_elem; /* list elements for thread_waiting_for_lock*/
+    struct lock *waiting_for_lock; /* The lock the thread is waiting for*/
+
 #ifdef USERPROG
     /* Owned by userprog/process.c. */
     uint32_t *pagedir;                  /* Page directory. */
@@ -126,10 +133,19 @@ const char *thread_name (void);
 
 void thread_exit (void) NO_RETURN;
 void thread_yield (void);
+void thread_yield_check(void);
 // Lab 1. Code Starts Here
 void thread_sleep(int64_t ticks);
 void thread_reinstate(void);
 // Lab 1. Code Ends Here
+
+// Lab 2: code starts here:
+bool thread_priority_comparator(const struct list_elem *elem, const struct list_elem *otherElem, void *aux);
+// Lab 2: code ends here
+void remove_threads_waiting_for_lock(struct lock *lock);
+
+
+void thread_priority_check(void);
 
 /* Performs some operation on thread t, given auxiliary data AUX. */
 typedef void thread_action_func (struct thread *t, void *aux);
