@@ -4,7 +4,7 @@
 tests/threads_TESTS = $(addprefix tests/threads/,alarm-priority		\
 priority-change priority-donate-one					\
 priority-donate-multiple priority-donate-multiple2			\
-priority-donate-nest priority-donate-sema priority-donate-lower		\
+priority-donate-nest priority-donate-sema priority-donate-condvar priority-donate-lower		\
 priority-fifo priority-preempt priority-sema priority-condvar		\
 priority-donate-chain)							\
 
@@ -17,6 +17,7 @@ tests/threads_SRC += tests/threads/priority-donate-multiple.c
 tests/threads_SRC += tests/threads/priority-donate-multiple2.c
 tests/threads_SRC += tests/threads/priority-donate-nest.c
 tests/threads_SRC += tests/threads/priority-donate-sema.c
+tests/threads_SRC += tests/threads/priority-donate-condvar.c
 tests/threads_SRC += tests/threads/priority-donate-lower.c
 tests/threads_SRC += tests/threads/priority-fifo.c
 tests/threads_SRC += tests/threads/priority-preempt.c
