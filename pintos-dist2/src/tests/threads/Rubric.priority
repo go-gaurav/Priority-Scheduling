@@ -13,4 +13,5 @@ Functionality of priority scheduler:
 0	priority-donate-nest
 0	priority-donate-chain
 3	priority-donate-sema
+3	priority-donate-condvar
 3	priority-donate-lower
