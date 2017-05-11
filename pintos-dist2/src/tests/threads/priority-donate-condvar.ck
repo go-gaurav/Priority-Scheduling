@@ -3,14 +3,18 @@ use strict;
 use warnings;
 use tests::tests;
 check_expected ([<<'EOF']);
-(priority-donate-sema) begin
-(priority-donate-sema) Thread L acquired lock.
-(priority-donate-sema) Thread L downed semaphore.
-(priority-donate-sema) Thread H acquired lock.
-(priority-donate-sema) Thread H finished.
-(priority-donate-sema) Thread M finished.
-(priority-donate-sema) Thread L finished.
-(priority-donate-sema) Main thread finished.
-(priority-donate-sema) end
+(priority-donate-condvar) begin
+(priority-donate-condvar) Thread Low : creating thread
+(priority-donate-condvar) Thread Med : creating thread
+(priority-donate-condvar) Thread High: creating thread
+(priority-donate-condvar) Thread Main: signalling...
+(priority-donate-condvar) Thread Low : is awake.
+(priority-donate-condvar) Thread High: is awake.
+(priority-donate-condvar) Thread High: finished.
+(priority-donate-condvar) Thread Med : is awake.
+(priority-donate-condvar) Thread Med : finished.
+(priority-donate-condvar) Thread Low : finished.
+(priority-donate-condvar) Thread Main: finished.
+(priority-donate-condvar) end
 EOF
 pass;
