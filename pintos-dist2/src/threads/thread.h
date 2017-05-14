@@ -92,14 +92,17 @@ struct thread
 
     /* Shared between thread.c and synch.c. */
     struct list_elem elem;              /* List element. */
+    // Lab 1 : Begin here
     int64_t blocked_ticks;              /* ticks till its blocked for */
+    // Lab 1 : End here
 
-    // LAB2: Priority Donation
-    int initial_priority;  									/* Old priority value. NOTE this value should only be used if priority_received is true*/
-    bool priority_changed_by_donation; /* convience boolean for determining if the priority of thread has changed by way of donation from other threads */
-    struct list waiting_threads; /* List of threads that have donated priorities to this thread*/
-    struct list_elem waiting_thread_elem; /* list elements for thread_waiting_for_lock*/
-    struct lock *waiting_for_lock; /* The lock the thread is waiting for*/
+    // Lab 2 : Begin here
+    int initial_priority;  									/* Old priority value. */
+    bool priority_changed_by_donation;      /* Convience boolean for determining if the priority of thread has changed by way of donation from other threads. */
+    struct list waiting_threads; 						/* List of threads that are waiting for thread to release a lock. */
+    struct list_elem waiting_thread_elem;   /* list elements for waiting_threads. */
+    struct lock *waiting_for_lock;    			/* The lock the thread is waiting for. */
+    // Lab 2 : End here
 
 #ifdef USERPROG
     /* Owned by userprog/process.c. */
@@ -133,22 +136,21 @@ const char *thread_name (void);
 
 void thread_exit (void) NO_RETURN;
 void thread_yield (void);
-void thread_yield_check(void);
-// Lab 1. Code Starts Here
+
+// Lab 1 : Begin here
 void thread_sleep(int64_t ticks);
 void thread_reinstate(void);
-// Lab 1. Code Ends Here
+// Lab 1 : End here
 
-// Lab 2: code starts here:
+// Lab 2 : Begin here
+void thread_yield_check(void);
 bool thread_priority_comparator(const struct list_elem *elem, const struct list_elem *otherElem, void *aux);
-// Lab 2: code ends here
 void thread_remove_threads_waiting_for_lock(struct lock *lock);
 void thread_set_waiting_for_lock(struct lock *lock);
 void thread_unset_waiting_for_lock(void);
 void thread_perform_priority_donation(struct lock *lock, struct thread* t);
-
-
 void thread_update_priority(void);
+// Lab 2 : End here
 
 /* Performs some operation on thread t, given auxiliary data AUX. */
 typedef void thread_action_func (struct thread *t, void *aux);

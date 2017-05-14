@@ -72,8 +72,9 @@ static void *alloc_frame (struct thread *, size_t size);
 static void schedule (void);
 void thread_schedule_tail (struct thread *prev);
 static tid_t allocate_tid (void);
+// Lab 1 : Begin here
 static bool thread_comparator(const struct list_elem *elem, const struct list_elem *otherElem, void *aux);
-
+// Lab 1 : End here
 
 
 /* Initializes the threading system by transforming the code
@@ -207,7 +208,9 @@ thread_create (const char *name, int priority,
   /* Add to run queue. */
   thread_unblock (t);
   old_level = intr_disable();
+  // Lab 2 : Begin here
   thread_yield_check();
+  // Lab 2 : End here
   intr_set_level(old_level);
   return tid;
 }
@@ -245,13 +248,11 @@ thread_unblock (struct thread *t)
 
   old_level = intr_disable ();
   ASSERT (t->status == THREAD_BLOCKED);
+  // Lab 2 : Begin here
   list_insert_ordered(&ready_list, &t->elem, thread_priority_comparator, NULL);
+  // Lab 2 : End here
   t->status = THREAD_READY;
   intr_set_level (old_level);
-  // Lab 2: code begins here:
-  // why did I choose not to put check here? Follow good practise and makes sense to put it here in unblock method?
-  // caused an error somehow
-  // TODO: CHECK WITH TUTOR/LECTURER on why this doesn't work.
 }
 
 /* Returns the name of the running thread. */
@@ -320,17 +321,29 @@ thread_yield (void)
 
   old_level = intr_disable ();
   if (cur != idle_thread) {
+  	// Lab 2 : Begin here
     list_insert_ordered(&ready_list, &cur->elem, thread_priority_comparator, NULL);
+    // Lab 2 : End here
   }
   cur->status = THREAD_READY;
   schedule ();
   intr_set_level (old_level);
 }
 
+/**
+ ### Lab 2 : Begin here
+ ###
+ */
+
+/**
+ * Lab 2 :
+ * This is a helper method to check and perform if the current thread must yield.
+ * Current thread must yield if a thread in the ready queue has a higher priority than
+ * the current thread.
+ */
 void thread_yield_check(void) {
   if (!list_empty(&ready_list)) {
-  	// sanity check to make sure that the ready list is sorted
-  	// TODO: Check if this can be removed.
+  	// make sure that the ready list is sorted
     list_sort(&ready_list, thread_priority_comparator, NULL);
     struct thread *head = list_entry(list_front(&ready_list), struct thread,elem);
     if (thread_current()->priority < head->priority) {
@@ -339,14 +352,24 @@ void thread_yield_check(void) {
   }
 }
 
+/**
+ * Lab 2 :
+ */
 void thread_set_waiting_for_lock(struct lock *lock){
 	thread_current()->waiting_for_lock = lock;
 }
 
+/**
+ * Lab 2 :
+ */
 void thread_unset_waiting_for_lock(void){
 	thread_current()->waiting_for_lock = NULL;
 }
 
+/**
+ * Lab 2 :
+ * Performs nested priority donation for given lock.
+ */
 void thread_perform_priority_donation(struct lock *lock, struct thread* t){
 	/**
  	 * Only perform priority donation if
@@ -371,7 +394,9 @@ void thread_perform_priority_donation(struct lock *lock, struct thread* t){
 }
 
 /**
- * Iterate over thread's list of waiting threads for lock and remove them
+ * Lab 2 :
+ * Iterate over thread's list of waiting threads for lock and remove them.
+ * This allows multiple priority donation tests to pass
  */
 void thread_remove_threads_waiting_for_lock(struct lock *lock){
 	if (!list_empty(&thread_current()->waiting_threads)) {
@@ -389,6 +414,7 @@ void thread_remove_threads_waiting_for_lock(struct lock *lock){
 }
 
 /**
+ * Lab 2 :
  * Checks if the thread priority needs to be updated based on the donated priorities.
  */
 void thread_update_priority(void) {
@@ -399,12 +425,17 @@ void thread_update_priority(void) {
 		struct thread* highest_donation_thread = list_entry(list_front(&thread_current()->waiting_threads), struct thread, waiting_thread_elem);
     // as our waiting threads are sorted by their priorities we only have to check the first most thread
 		if (highest_donation_thread->priority > thread_current()->priority) {
+			// if the highest_donation_thread has greater priority than current thread, then it must have donated its priority to the current thread.
 			thread_current()->priority = highest_donation_thread->priority;
 			thread_current()->priority_changed_by_donation = true;
 		}
 	}
 }
 
+/**
+ * Lab2:
+ * Comparator used for ordering list of thread according to their priority
+ */
 bool thread_priority_comparator(const struct list_elem *elem, const struct list_elem *otherElem, void *aux UNUSED){
 	ASSERT(elem != NULL && otherElem != NULL);
 	const struct thread *thread = list_entry(elem, struct thread, elem);
@@ -412,7 +443,16 @@ bool thread_priority_comparator(const struct list_elem *elem, const struct list_
 	return thread->priority > otherThread->priority;
 }
 
-// Lab 1. Code Starts Here
+/**
+ ### Lab 2 : End here
+ ###
+ */
+
+/**
+ ### Lab 1 : Begin here
+ ###
+ */
+
 /**
  * Sleeps the current (non idle) thread for ticks.
  * The blocked thread is added to the blocked queue.
@@ -476,8 +516,10 @@ void thread_reinstate (void)
   intr_set_level(interruptStatus);
 }
 
-// Lab 1. Code Ends Here
-
+/**
+ ### Lab 1 : End here
+ ###
+ */
 /* Invoke function 'func' on all threads, passing along 'aux'.
    This function must be called with interrupts off. */
 void
@@ -495,8 +537,14 @@ thread_foreach (thread_action_func *func, void *aux)
     }
 }
 
-/* Sets the current thread's priority to NEW_PRIORITY.
- * TODO: Write how if new priority received is greater than donated priority received isn't handled
+/**
+ ### Lab 2 : Begin here
+ ###
+ */
+
+/**
+ * Lab 2 :
+ * Sets the current thread's priority to NEW_PRIORITY.
  */
 void
 thread_set_priority (int new_priority)
@@ -507,10 +555,12 @@ thread_set_priority (int new_priority)
   int old_priority = thread_current()->priority;
 
   thread_current()->initial_priority = new_priority;
+
   // do not change priority if its lower than a donated priority received
   if(thread_current()->priority_changed_by_donation == true && new_priority < thread_current()->priority){
 	  return;
   }
+
   // update priority as it is safe to do so now
   thread_current()->priority = new_priority;
 
@@ -521,6 +571,11 @@ thread_set_priority (int new_priority)
 
   intr_set_level(interruptStatus);
 }
+
+/**
+ ### Lab 2 : End here
+ ###
+ */
 
 /* Returns the current thread's priority. */
 int

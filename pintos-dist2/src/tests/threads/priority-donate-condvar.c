@@ -1,4 +1,6 @@
-/* Low priority thread "Low" acquires two locks: lockA and lockB, then blocks doing cond_wait on lockA.
+/* Lab 2 : priority donation test using conditional variables
+ *
+   Low priority thread "Low" acquires two locks: lockA and lockB, then blocks doing cond_wait on lockA.
    Medium priority thread "Med" then also blocks waiting on lockA.
    Next, high priority thread "High" attempts to acquire the lockB,
    donating its priority to "Low".
@@ -10,7 +12,8 @@
    "High" terminates, then "Med", then "Low", and finally the
    main thread.
 
-   Test is based on priority-donate-sema. Written by Godmar Back <gback@cs.vt.edu>.
+   This test is based on priority-donate-sema written by Godmar Back <gback@cs.vt.edu>.
+
    Written by Harman Singh <singhharm1@ecs.vuw.ac.nz>. */
 
 #include <stdio.h>
